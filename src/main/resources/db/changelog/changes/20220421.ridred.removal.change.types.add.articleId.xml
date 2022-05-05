@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.7.xsd">
+
+    <changeSet author="stakhlev" id="20220421-0">
+        <sql splitStatements="true">
+            TRUNCATE TABLE ridred;
+            TRUNCATE TABLE removals;
+        </sql>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-1">
+        <dropColumn tableName="ridred" columnName="articleNumber"/>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-2">
+        <addColumn tableName="ridred" >
+            <column name="articleId" type="bigint">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-3">
+        <modifyDataType  columnName="rid"
+                         newDataType="date"
+                         tableName="ridred"/>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-4">
+        <modifyDataType  columnName="red"
+                         newDataType="date"
+                         tableName="ridred"/>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-5">
+        <dropColumn tableName="removals" columnName="articleNumber"/>
+    </changeSet>
+
+    <changeSet author="stakhlev" id="20220421-6">
+        <addColumn tableName="removals" >
+            <column name="articleId" type="bigint">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+</databaseChangeLog>

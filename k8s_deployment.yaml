@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tsar-planogram-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tsar-planogram-deployment
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: tsar-planogram-deployment
+        tier: backend
+    spec:
+      containers:
+        - name: tsar-planogram
+          image: $DEPLOY_IMAGE
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2200Mi
+            requests:
+              cpu: 40m
+              memory: 2000Mi
+          ports:
+            - containerPort: 3100
+      imagePullSecrets:
+        - name: adidas-harbor-cloud-registry

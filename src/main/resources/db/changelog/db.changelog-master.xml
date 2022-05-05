@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <include file="db/changelog/changes/20220201.initial.xml"/>
+    <include file="db/changelog/changes/20220207.changed.type.vmstandards.sizescale.xml"/>
+    <include file="db/changelog/changes/20220303.create.tables.matrix.ridred.removals.xml"/>
+    <include file="db/changelog/changes/20220322.create.table.planogrampriority.xml"/>
+    <include file="db/changelog/changes/20220325.add.column.planogrampriority.presmin.xml"/>
+    <include file="db/changelog/changes/20220412.create.table.planogram.xml"/>
+    <include file="db/changelog/changes/20220419.vmStandards.add.column.sizeScaleId.xml"/>
+    <include file="db/changelog/changes/20220421.ridred.removal.change.types.add.articleId.xml"/>
+    <include file="db/changelog/changes/20220420.matrix.add.column.ArticleId.xml"/>
+
+</databaseChangeLog>
