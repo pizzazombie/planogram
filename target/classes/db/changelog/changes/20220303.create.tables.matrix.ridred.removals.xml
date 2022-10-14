@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20220303-1" author="rusanpav">
+        <createTable tableName="matrix">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_matrix"/>
+            </column>
+            <column name="sap" type="varchar(4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="articleNumber" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sizeIndex" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20220303-2" author="rusanpav">
+        <createTable tableName="ridred">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ridred"/>
+            </column>
+            <column name="articleNumber" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rid" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+            <column name="red" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    
+    <changeSet id="20220303-3" author="rusanpav">
+        <createTable tableName="removals">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="pk_ridred"/>
+            </column>
+            <column name="removalNumber" type="varchar(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sap" type="varchar(4)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="articleNumber" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

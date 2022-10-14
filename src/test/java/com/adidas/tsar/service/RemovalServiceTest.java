@@ -22,76 +22,76 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-	classes = PlanogramApplication.class,
-	webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-	properties = {"spring.liquibase.enabled=false"}
+    classes = PlanogramApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.MOCK,
+    properties = {"spring.liquibase.enabled=false"}
 )
 public class RemovalServiceTest extends BaseIntegrationTest {
 
-	@Autowired private  RemovalService removalService;
-	@MockBean private RemovalRepository removalRepository;
-	@Captor private ArgumentCaptor<List<Removal>> removalListCaptor;
+    @Autowired
+    private RemovalService removalService;
+    @MockBean
+    private RemovalRepository removalRepository;
+    @Captor
+    private ArgumentCaptor<List<Removal>> removalListCaptor;
 
-	@Test
-	void createRemovals_dataNotExist_created(){
-		var removalList = List.of(
-			new RemovalCreateDto(ARTICLE.getCode(), SAP_1, REMOVAL_NUM_1),
-			new RemovalCreateDto(ARTICLE_2.getCode(), SAP_2, REMOVAL_NUM_2)
-		);
+    @Test
+    void createRemovals_dataNotExist_created() {
+        var removalList = List.of(
+            new RemovalCreateDto(ARTICLE.getCode(), SAP_1, REMOVAL_NUM_1),
+            new RemovalCreateDto(ARTICLE_2.getCode(), SAP_2, REMOVAL_NUM_2)
+        );
 
-		when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of(ARTICLE, ARTICLE_2)));
+        when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of(ARTICLE, ARTICLE_2)));
 
-		removalService.createRemovals(removalList);
+        removalService.createRemovals(removalList);
 
-		verify(removalRepository, atLeastOnce()).saveAll(removalListCaptor.capture());
-		final var createdEntities = removalListCaptor.getValue();
-		assertEquals(2, createdEntities.size());
-		verifyRemoval(createdEntities.get(0), SAP_1, ARTICLE, REMOVAL_NUM_1);
-		verifyRemoval(createdEntities.get(1), SAP_2, ARTICLE_2, REMOVAL_NUM_2);
-	}
+        verify(removalRepository, atLeastOnce()).saveAll(removalListCaptor.capture());
+        final var createdEntities = removalListCaptor.getValue();
+        assertEquals(2, createdEntities.size());
+        verifyRemoval(createdEntities.get(0), STORE_1.getId(), ARTICLE, REMOVAL_NUM_1);
+        verifyRemoval(createdEntities.get(1), STORE_2.getId(), ARTICLE_2, REMOVAL_NUM_2);
+    }
 
-	@Test
-	void deleteRemovals_dataExist_deleted(){
+    @Test
+    void deleteRemovals_dataExist_deleted() {
 
-		var deleteIds = List.of(1L, 2L);
+        var deleteIds = List.of(1L, 2L);
 
-		removalService.deleteRemovals(deleteIds);
+        removalService.deleteRemovals(deleteIds);
 
-		verify(removalRepository, atLeastOnce()).deleteAllById(longListCaptor.capture());
-		assertEquals(deleteIds, longListCaptor.getValue());
-	}
+        verify(removalRepository, atLeastOnce()).deleteAllById(longListCaptor.capture());
+        assertEquals(deleteIds, longListCaptor.getValue());
+    }
 
-	@Test
-	void createRemovals_articleNotFound_created(){
-		var removalList = List.of(
-			new RemovalCreateDto(ARTICLE.getCode(), SAP_1, REMOVAL_NUM_1),
-			new RemovalCreateDto(ARTICLE_2.getCode(), SAP_2, REMOVAL_NUM_2)
-		);
+    @Test
+    void createRemovals_articleNotFound_created() {
+        var removalList = List.of(
+            new RemovalCreateDto(ARTICLE.getCode(), SAP_1, REMOVAL_NUM_1),
+            new RemovalCreateDto(ARTICLE_2.getCode(), SAP_2, REMOVAL_NUM_2)
+        );
 
-		when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of(ARTICLE_2)));
+        when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of(ARTICLE_2)));
 
-		removalService.createRemovals(removalList);
+        removalService.createRemovals(removalList);
 
-		verify(removalRepository, atLeastOnce()).saveAll(removalListCaptor.capture());
-		final var createdEntities = removalListCaptor.getValue();
-		assertEquals(1, createdEntities.size());
-		verifyRemoval(createdEntities.get(0), SAP_2, ARTICLE_2, REMOVAL_NUM_2);
-	}
+        verify(removalRepository, atLeastOnce()).saveAll(removalListCaptor.capture());
+        final var createdEntities = removalListCaptor.getValue();
+        assertEquals(1, createdEntities.size());
+        verifyRemoval(createdEntities.get(0), STORE_2.getId(), ARTICLE_2, REMOVAL_NUM_2);
+    }
 
-	private void verifyRemoval(Removal removal, String sap, ArticleDto articleDto, String removalNumber){
-		assertEquals(articleDto.getId().longValue(), removal.getArticleId());
-		assertEquals(removalNumber, removal.getRemovalNumber());
-		assertEquals(sap, removal.getSap());
+    private void verifyRemoval(Removal removal, int storeId, ArticleDto articleDto, String removalNumber) {
+        assertEquals(articleDto.getId().longValue(), removal.getArticleId());
+        assertEquals(removalNumber, removal.getRemovalNumber());
+        assertEquals(storeId, removal.getStoreId());
 
-	}
+    }
 
 }

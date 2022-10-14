@@ -11,9 +11,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id", callSuper = false)
-public class ArticleDto implements DictionaryEntity {
+public class ArticleDto {
 
-    private Integer id;
+    private Long id;
     private String name;
     private String code;
     @Nullable

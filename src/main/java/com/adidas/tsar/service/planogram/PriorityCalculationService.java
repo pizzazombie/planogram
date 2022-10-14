@@ -78,8 +78,10 @@ public class PriorityCalculationService {
     }
 
     public void populateAppPriorities(final PrioritiesDecorator batch) {
-        final var totalBuys = totalBuyRepository.findTotalBuyByArticleIdOrderByQuantityDesc(batch.getArticle().getId());
+        final var totalBuys = totalBuyRepository.findTotalBuyByArticleIdOrderByQuantityDescSizeIndexAsc(batch.getArticle().getId());
+        //setup priority from totalBuys ordered by totalBuy.quantity
         var maxPriorityInBatch = totalBuys.stream()
+            .filter(it -> batch.getSizeIndexes().contains(it.getSizeIndex()))
             .reduce(EMPTY_PRIORITY,
                 (priority, totalBuy) -> {
                     batch.setPriority(totalBuy.getSizeIndex(), ++priority);
@@ -93,6 +95,8 @@ public class PriorityCalculationService {
             .map(Map.Entry::getKey)
             .collect(Collectors.toSet());
 
+        //if totalBuy doesn't exists for some article|sizeIndex - populate priority from matrix
+        //setup priority from matrix ordered by matrix.quantity
         maxPriorityInBatch = batch.getQuantitySumBySizeIndex().entrySet().stream()
             .filter(it -> sizeIndexesWithEmptyPriority.contains(it.getKey()))
             .sorted(

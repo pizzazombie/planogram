@@ -1,5 +1,6 @@
 package com.adidas.tsar.service;
 
+import com.adidas.tsar.data.MatrixDao;
 import com.adidas.tsar.data.MatrixRepository;
 import com.adidas.tsar.dto.ArticleDto;
 import com.adidas.tsar.dto.ArticleSizeIndexesDto;
@@ -24,9 +25,9 @@ public class MatrixService {
 
     private final TsarMasterDataApiClient tsarMasterDataApiClient;
     private final MatrixRepository matrixRepository;
+    private final MatrixDao matrixDao;
 
-    public Integer createMatrix(List<MatrixCreateDto> requestBody){
-
+    public Integer createMatrix(List<MatrixCreateDto> requestBody) {
         final var articlesWithSizeIndices = tsarMasterDataApiClient.getArticles(
             ArticleApiParamsFactory.getArticleApiParamsForArticleCodes(requestBody.stream().map(MatrixCreateDto::getArticle).collect(Collectors.toSet()))
         ).getData().stream().collect(Collectors.toMap(ArticleDto::getCode,
@@ -34,18 +35,16 @@ public class MatrixService {
                 .map(ArticleDto.SkuResponseDto::getSizeIndex)
                 .collect(Collectors.toSet()))
         ));
-
         final var stores = tsarMasterDataApiClient.getStores().getData().stream().collect(Collectors.toMap(StoreDto::getSap, it -> it));
-
         final var newItems = requestBody.stream()
             .filter(it -> articlesWithSizeIndices.containsKey(it.getArticle())
                 && articlesWithSizeIndices.get(it.getArticle()).getSizeIndexes().contains(it.getSizeIndex())
                 && stores.containsKey(it.getSap()))
-            .map(createDto -> MatrixFactory.getMatrix(createDto, articlesWithSizeIndices.get(createDto.getArticle()).getArticleDto()))
+            .map(createDto -> MatrixFactory.getMatrix(createDto, articlesWithSizeIndices.get(createDto.getArticle()).getArticleDto(), stores.get(createDto.getSap())))
             .collect(Collectors.toList());
 
         log.info("Save new Matrix: {}", newItems);
-        matrixRepository.saveAll(newItems);
+        matrixDao.saveAll(newItems);
         return newItems.size();
     }
 

@@ -9,7 +9,6 @@ import com.adidas.tsar.domain.VmStandard;
 import com.adidas.tsar.dto.*;
 import com.adidas.tsar.dto.planogram.MatricesByArticleImpl;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +33,7 @@ import static org.mockito.Mockito.*;
 )
 class PresMinCalculationServiceTest extends BaseIntegrationTest {
 
-    private final ArticleDto FOOTWEAR_ARTICLE = TestUtils.prepareArticle(1, "articleName1", "BA9281", BRAND, AGE, CATEGORY, PRODUCT_TYPE, DIVISION_FOOTWEAR, SIZE_SCALE, List.of(SKU_1, SKU_2));
+    private final ArticleDto FOOTWEAR_ARTICLE = TestUtils.prepareArticle(1L, "articleName1", "BA9281", BRAND, AGE, CATEGORY, PRODUCT_TYPE, DIVISION_FOOTWEAR, SIZE_SCALE, List.of(SKU_1, SKU_2));
 
     @MockBean
     VmStandardRepository standardRepository;
@@ -67,7 +66,7 @@ class PresMinCalculationServiceTest extends BaseIntegrationTest {
         final var chunk = new MatricesByArticleImpl(FOOTWEAR_ARTICLE, Collections.emptyList());
         final var spyPresMinService = spy(presMinCalculationService);
 
-        final var presMin = spyPresMinService.getPresMin(new HashMap<>(), new DictionariesCollectionUtils(Collections.emptyList()), chunk);
+        final var presMin = spyPresMinService.getPresMin(new HashMap<>(), new DictionariesCollectionUtils(), chunk);
 
         assertEquals(1, presMin);
         verify(spyPresMinService, never()).getApparelPresMin(any(), any(), any(ArticleDto.class));
@@ -92,7 +91,6 @@ class PresMinCalculationServiceTest extends BaseIntegrationTest {
         List<VmStandard> standards = List.of(
             TestUtils.prepareStandard(0, BRAND, AGE, CATEGORY, PRODUCT_TYPE, DIVISION, EMPTY_SIZE_SCALE, 1),
             TestUtils.prepareStandard(0, BRAND_2, AGE_2, CATEGORY_2, PRODUCT_TYPE_2, DIVISION_2, EMPTY_SIZE_SCALE, 2)
-
         );
         when(standardRepository.findAll()).thenReturn(standards);
         final var standardMap = presMinCalculationService.preparePresMinMap();
@@ -159,14 +157,13 @@ class PresMinCalculationServiceTest extends BaseIntegrationTest {
     }
 
     private DictionariesCollectionUtils prepareDictionaries() {
-        return new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, Arrays.asList(EMPTY_BRAND, BRAND, BRAND_2)),
-            Pair.of(RmhGenderAgeDto.class, Arrays.asList(EMPTY_AGE, AGE, AGE_2)),
-            Pair.of(RmhCategoryDto.class, Arrays.asList(EMPTY_CATEGORY, CATEGORY, CATEGORY_2)),
-            Pair.of(RmhProductTypeDto.class, Arrays.asList(PRODUCT_TYPE, PRODUCT_TYPE_2)),
-            Pair.of(RmhProductDivisionDto.class, Arrays.asList(EMPTY_DIVISION, DIVISION, DIVISION_2, DIVISION_FOOTWEAR)),
-            Pair.of(SizeScaleDto.class, Arrays.asList(SIZE_SCALE, SIZE_SCALE_2))
-        ));
+        return new DictionariesCollectionUtils()
+            .with(BrandDto.class, Arrays.asList(EMPTY_BRAND, BRAND, BRAND_2), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, Arrays.asList(EMPTY_AGE, AGE, AGE_2), dictionaryBlankName)
+            .with(RmhCategoryDto.class, Arrays.asList(EMPTY_CATEGORY, CATEGORY, CATEGORY_2), dictionaryBlankName)
+            .with(RmhProductTypeDto.class, Arrays.asList(PRODUCT_TYPE, PRODUCT_TYPE_2), dictionaryBlankName)
+            .with(RmhProductDivisionDto.class, Arrays.asList(EMPTY_DIVISION, DIVISION, DIVISION_2, DIVISION_FOOTWEAR), dictionaryBlankName)
+            .with(SizeScaleDto.class, Arrays.asList(EMPTY_SIZE_SCALE, SIZE_SCALE, SIZE_SCALE_2), dictionaryBlankName);
     }
 
 }

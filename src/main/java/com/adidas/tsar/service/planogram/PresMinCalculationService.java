@@ -11,7 +11,6 @@ import com.adidas.tsar.exceptions.AppException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -23,9 +22,6 @@ import static java.util.stream.Collectors.toMap;
 @Service
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
 public class PresMinCalculationService {
-
-    @Value("${app.empty-dictionary-item-id}")
-    private int emptyDictionaryItemId;
 
     private final int FOOTWEAR_PRES_MIN = 1;
     private final int MIN_PRES_MIN = 0;
@@ -57,11 +53,11 @@ public class PresMinCalculationService {
 
         VmStandardKeyImpl key = new VmStandardKeyImpl(brandId, ageId, categoryId, productTypeId, divisionId, sizeScaleId);
         return Optional.ofNullable(presMinMap.get(key))
-            .or(() -> Optional.ofNullable(presMinMap.get(key.setSizeScaleId(emptyDictionaryItemId))))
-            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhCategoryId(emptyDictionaryItemId))))
-            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhGenderAgeId(emptyDictionaryItemId))))
-            .or(() -> Optional.ofNullable(presMinMap.get(key.setBrandId(emptyDictionaryItemId))))
-            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhProductDivisionId(emptyDictionaryItemId))))
+            .or(() -> Optional.ofNullable(presMinMap.get(key.setSizeScaleId(dictionaries.get(SizeScaleDto.class).getBlankItem().getId()))))
+            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhCategoryId(dictionaries.get(RmhCategoryDto.class).getBlankItem().getId()))))
+            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhGenderAgeId(dictionaries.get(RmhGenderAgeDto.class).getBlankItem().getId()))))
+            .or(() -> Optional.ofNullable(presMinMap.get(key.setBrandId(dictionaries.get(BrandDto.class).getBlankItem().getId()))))
+            .or(() -> Optional.ofNullable(presMinMap.get(key.setRmhProductDivisionId(dictionaries.get(RmhProductDivisionDto.class).getBlankItem().getId()))))
             .orElse(MIN_PRES_MIN);
     }
 }

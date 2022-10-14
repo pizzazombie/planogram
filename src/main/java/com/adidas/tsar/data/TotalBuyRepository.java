@@ -15,6 +15,6 @@ public interface TotalBuyRepository extends JpaRepository<TotalBuy, Long> {
     @Query(value = "truncate table totalBuy", nativeQuery = true)
     void truncate();
 
-    List<TotalBuy> findTotalBuyByArticleIdOrderByQuantityDesc(int articleId);
+    List<TotalBuy> findTotalBuyByArticleIdOrderByQuantityDescSizeIndexAsc(long articleId);
 
 }

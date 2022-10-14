@@ -14,7 +14,6 @@ import com.adidas.tsar.dto.RmhGenderAgeDto;
 import com.adidas.tsar.dto.planogram.MatricesByArticleImpl;
 import com.adidas.tsar.dto.planogram.PrioritiesDecorator;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,18 +56,18 @@ class PriorityCalculationServiceTest extends BaseIntegrationTest {
 
     @Test
     void populateFtwPriorities_ftwPrioritiesExists_prioritiesGotFromFtwPriorities() {
-        final var dictionaries = new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, Arrays.asList(BRAND, BRAND_2)),
-            Pair.of(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2))
-        ));
+        final var dictionaries = new DictionariesCollectionUtils()
+            .with(BrandDto.class, Arrays.asList(BRAND, BRAND_2), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2), dictionaryBlankName);
+
         final var priorities = Arrays.asList(
             TestUtils.prepareFtwPriority(1L, BRAND, AGE, SIZE_INDEX_1, 1),
             TestUtils.prepareFtwPriority(2L, BRAND, AGE, SIZE_INDEX_2, 2)
         );
         when(ftwPriorityRepository.findAllByKeys(any())).thenReturn(priorities);
         var calcBatch = preparePriorityCalcBatch(ARTICLE, List.of(
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_1, 0),
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_2, 0)
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_1, 0),
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_2, 0)
         ));
 
         priorityCalculationService.populateFtwPriorities(dictionaries, calcBatch);
@@ -79,14 +78,13 @@ class PriorityCalculationServiceTest extends BaseIntegrationTest {
 
     @Test
     void populateFtwPriorities_ftwPrioritiesNotExists_prioritiesPopulateByDefaultMethod() {
-        final var dictionaries = new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, Arrays.asList(BRAND, BRAND_2)),
-            Pair.of(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2))
-        ));
+        final var dictionaries = new DictionariesCollectionUtils()
+            .with(BrandDto.class, Arrays.asList(BRAND, BRAND_2), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2), dictionaryBlankName);
         when(ftwPriorityRepository.findAllByKeys(any())).thenReturn(Lists.emptyList());
         var calcBatch = preparePriorityCalcBatch(ARTICLE, List.of(
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_1, 0),
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_2, 0)
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_1, 0),
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_2, 0)
         ));
 
         priorityCalculationService.populateFtwPriorities(dictionaries, calcBatch);
@@ -97,17 +95,16 @@ class PriorityCalculationServiceTest extends BaseIntegrationTest {
 
     @Test
     void populateFtwPriorities_notAllFtwPrioritiesExists_prioritiesGotFromFtwPrioritiesAndOtherPopulateByDefaultMethod() {
-        final var dictionaries = new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, Arrays.asList(BRAND, BRAND_2)),
-            Pair.of(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2))
-        ));
+        final var dictionaries = new DictionariesCollectionUtils()
+            .with(BrandDto.class, Arrays.asList(BRAND, BRAND_2), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, Arrays.asList(AGE, AGE_2), dictionaryBlankName);
         final var priorities = Collections.singletonList(
             TestUtils.prepareFtwPriority(2L, BRAND, AGE, SIZE_INDEX_2, 2)
         );
         when(ftwPriorityRepository.findAllByKeys(any())).thenReturn(priorities);
         var calcBatch = preparePriorityCalcBatch(ARTICLE, List.of(
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_1, 0),
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_2, 0)
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_1, 0),
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_2, 0)
         ));
 
         priorityCalculationService.populateFtwPriorities(dictionaries, calcBatch);
@@ -122,11 +119,11 @@ class PriorityCalculationServiceTest extends BaseIntegrationTest {
             TestUtils.prepareTotalBuy(ARTICLE, SIZE_INDEX_2, 10),
             TestUtils.prepareTotalBuy(ARTICLE, SIZE_INDEX_1, 20)
         );
-        when(totalBuyRepository.findTotalBuyByArticleIdOrderByQuantityDesc(eq(ARTICLE.getId()))).thenReturn(totalBuys);
+        when(totalBuyRepository.findTotalBuyByArticleIdOrderByQuantityDescSizeIndexAsc(eq(ARTICLE.getId()))).thenReturn(totalBuys);
         when(matrixRepository.findByArticleIdAndSizeIndexIn(eq(ARTICLE.getId().longValue()), any())).thenReturn(Lists.emptyList());
         var calcBatch = preparePriorityCalcBatch(ARTICLE, List.of(
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_1, 0),
-            TestUtils.prepareMatrix(ARTICLE, SIZE_INDEX_2, 0)
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_1, 0),
+            TestUtils.prepareMatrix(ARTICLE, STORE_1.getId(), SIZE_INDEX_2, 0)
         ));
 
         priorityCalculationService.populateAppPriorities(calcBatch);

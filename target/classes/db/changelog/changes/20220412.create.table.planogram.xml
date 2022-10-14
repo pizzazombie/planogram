@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20220412-1" author="ponomval">
+        <dropTable tableName="planogramPriority"/>
+    </changeSet>
+
+    <changeSet id="20220412-2" author="ponomval">
+        <createTable tableName="planogram">
+            <column name="articleCode" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="storeCode" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sizeIndex" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="presMin" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="salesFloorQty" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finalSalesFloorQty" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ignoreForReverseReplenishment" type="int">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

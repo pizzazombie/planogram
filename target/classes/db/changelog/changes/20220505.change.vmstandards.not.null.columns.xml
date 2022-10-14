@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20220505-1" author="ponomval">
+        <dropTable tableName="vmStandards"/>
+    </changeSet>
+
+    <changeSet id="20220505-2" author="ponomval">
+        <createTable tableName="vmStandards">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="vm_standards_pk"/>
+            </column>
+            <column name="brandId" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhGenderAgeId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhCategoryId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhProductTypeId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhProductDivisionId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sizeScaleId" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="presMin" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedBy" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedDate" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

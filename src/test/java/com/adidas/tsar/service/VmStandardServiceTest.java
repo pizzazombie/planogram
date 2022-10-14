@@ -175,13 +175,18 @@ class VmStandardServiceTest extends BaseIntegrationTest {
         verify(vmStandardRepository, atLeastOnce()).saveAll(vmStandardListCaptor.capture());
         final var createdStandards = vmStandardListCaptor.getValue();
         createdStandards.sort(Comparator.comparingInt(VmStandard::getPresMin));
-        assertEquals(6, createdStandards.size());
+        assertEquals(11, createdStandards.size());
         verifyStandard(createdStandards.get(0), BRAND_2, AGE, CATEGORY, PRODUCT_TYPE, DIVISION, SIZE_SCALE, 1);
         verifyStandard(createdStandards.get(1), BRAND_2, AGE_2, CATEGORY_2, PRODUCT_TYPE, DIVISION_FOOTWEAR, SIZE_SCALE, 2);
         verifyStandard(createdStandards.get(2), BRAND_2, AGE_2, CATEGORY, PRODUCT_TYPE, DIVISION, SIZE_SCALE, 3);
         verifyStandard(createdStandards.get(3), BRAND, AGE_2, CATEGORY_2, PRODUCT_TYPE_2, DIVISION_FOOTWEAR, SIZE_SCALE_2, 4);
         verifyStandard(createdStandards.get(4), BRAND, AGE, CATEGORY, PRODUCT_TYPE_2, DIVISION, SIZE_SCALE_2, 5);
         verifyStandard(createdStandards.get(5), BRAND, AGE, CATEGORY_2, PRODUCT_TYPE_2, DIVISION_FOOTWEAR, SIZE_SCALE_2, 6);
+        verifyStandard(createdStandards.get(6), BRAND, AGE, CATEGORY_2, PRODUCT_TYPE_2, DIVISION_FOOTWEAR, EMPTY_SIZE_SCALE, 7);
+        verifyStandard(createdStandards.get(7), BRAND, AGE, CATEGORY_2, PRODUCT_TYPE_2, EMPTY_DIVISION, EMPTY_SIZE_SCALE, 8);
+        verifyStandard(createdStandards.get(8), BRAND, AGE, EMPTY_CATEGORY, PRODUCT_TYPE_2, EMPTY_DIVISION, EMPTY_SIZE_SCALE, 9);
+        verifyStandard(createdStandards.get(9), BRAND, EMPTY_AGE, EMPTY_CATEGORY, PRODUCT_TYPE_2, EMPTY_DIVISION, EMPTY_SIZE_SCALE, 10);
+        verifyStandard(createdStandards.get(10), EMPTY_BRAND, EMPTY_AGE, EMPTY_CATEGORY, PRODUCT_TYPE_2, EMPTY_DIVISION, EMPTY_SIZE_SCALE, 11);
     }
 
 

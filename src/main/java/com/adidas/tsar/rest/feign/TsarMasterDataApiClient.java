@@ -115,7 +115,14 @@ public interface TsarMasterDataApiClient {
 
     @GetMapping("/sizescales")
     @CircuitBreaker(name = API_NAME, fallbackMethod = "getSizeScalesFallback")
-    BaseResponse<List<SizeScaleDto>> getSizeScales();
+    BaseResponse<List<SizeScaleDto>> getSizeScales(
+        @RequestParam(value = "page") int page,
+        @RequestParam(value = "size") int size
+    );
+
+    default BaseResponse<List<SizeScaleDto>> getSizeScales() {
+        return getSizeScales(FIRST_PAGE, MAX_PAGE_SIZE);
+    }
 
     default BaseResponse<List<SizeScaleDto>> getSizeScalesFallback(ApiException e) {
         throw e;
@@ -123,7 +130,14 @@ public interface TsarMasterDataApiClient {
 
     @GetMapping("/stores")
     @CircuitBreaker(name = API_NAME, fallbackMethod = "getStoresFallback")
-    BaseResponse<List<StoreDto>> getStores();
+    BaseResponse<List<StoreDto>> getStores(
+        @RequestParam(value = "page") int page,
+        @RequestParam(value = "size") int size
+    );
+
+    default BaseResponse<List<StoreDto>> getStores() {
+        return getStores(FIRST_PAGE, MAX_PAGE_SIZE);
+    }
 
     default BaseResponse<List<StoreDto>> getStoresFallback(ApiException e) {
         throw e;

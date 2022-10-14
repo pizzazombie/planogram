@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20220601-1" author="ponomval">
+        <sql>
+            TRUNCATE TABLE planogram;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20220601-2" author="ponomval">
+        <addColumn tableName="planogram" >
+            <column name="gtin" type="varchar(13)">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20220601-3" author="ponomval">
+        <dropColumn tableName="planogram" columnName="ignoreForReverseReplenishment"/>
+    </changeSet>
+
+    <changeSet id="20220601-4" author="ponomval">
+        <addColumn tableName="planogram">
+            <column name="ignoreForReverseReplenishment" type="bit">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
+</databaseChangeLog>

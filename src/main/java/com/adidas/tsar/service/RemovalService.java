@@ -2,6 +2,7 @@ package com.adidas.tsar.service;
 
 import com.adidas.tsar.data.RemovalRepository;
 import com.adidas.tsar.dto.ArticleDto;
+import com.adidas.tsar.dto.StoreDto;
 import com.adidas.tsar.dto.removal.RemovalCreateDto;
 import com.adidas.tsar.mapper.ArticleApiParamsFactory;
 import com.adidas.tsar.mapper.RemovalFactory;
@@ -23,15 +24,14 @@ public class RemovalService {
     private final TsarMasterDataApiClient tsarMasterDataApiClient;
     private final RemovalRepository removalRepository;
 
-    public Integer createRemovals(List<RemovalCreateDto> requestBody){
-
+    public Integer createRemovals(List<RemovalCreateDto> requestBody) {
         final var articles = tsarMasterDataApiClient.getArticles(
-                ArticleApiParamsFactory.getArticleApiParamsForArticleCodes(requestBody.stream().map(RemovalCreateDto::getArticle).collect(Collectors.toSet()))
+            ArticleApiParamsFactory.getArticleApiParamsForArticleCodes(requestBody.stream().map(RemovalCreateDto::getArticle).collect(Collectors.toSet()))
         ).getData().stream().collect(Collectors.toMap(ArticleDto::getCode, it -> it));
-
+        final var stores = tsarMasterDataApiClient.getStores().getData().stream().collect(Collectors.toMap(StoreDto::getSap, it -> it));
         final var newItems = requestBody.stream()
-            .filter(it -> articles.containsKey(it.getArticle()))
-            .map(createDto -> RemovalFactory.getRemoval(createDto, articles.get(createDto.getArticle())))
+            .filter(it -> articles.containsKey(it.getArticle()) && stores.containsKey(it.getSap()))
+            .map(createDto -> RemovalFactory.getRemoval(createDto, articles.get(createDto.getArticle()), stores.get(createDto.getSap())))
             .collect(Collectors.toList());
 
         log.info("Save new Removals: {}", newItems);

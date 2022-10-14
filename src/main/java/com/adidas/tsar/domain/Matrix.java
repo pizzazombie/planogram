@@ -5,6 +5,7 @@ import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "matrix")
@@ -13,13 +14,10 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Accessors(chain = true)
-@EqualsAndHashCode(of = "id", callSuper = false)
 @ToString
 public class Matrix implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
     private long id;
 
     @Column(name = "articleId", nullable = false)
@@ -31,7 +29,27 @@ public class Matrix implements Serializable {
     @Column(name = "quantity", nullable = false)
     private int quantity;
 
-    @Column(name = "sap", nullable = false)
-    private String sap;
+    @Column(name = "storeId", nullable = false)
+    private int storeId;
+
+    public Matrix(long articleId, String sizeIndex, int quantity, int storeId) {
+        this.articleId = articleId;
+        this.sizeIndex = sizeIndex;
+        this.quantity = quantity;
+        this.storeId = storeId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Matrix matrix = (Matrix) o;
+        return articleId == matrix.articleId && quantity == matrix.quantity && storeId == matrix.storeId && Objects.equals(sizeIndex, matrix.sizeIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(articleId, sizeIndex, quantity, storeId);
+    }
 
 }

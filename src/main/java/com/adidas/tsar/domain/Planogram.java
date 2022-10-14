@@ -7,7 +7,13 @@ import lombok.Setter;
 import lombok.ToString;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "planogram")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -15,11 +21,18 @@ import javax.persistence.Column;
 @ToString
 public class Planogram {
 
+    @Id
+    @Column(name = "id", nullable = false)
+    private Long id;
+
     @Column(name = "articleCode", nullable = false)
     private String articleCode;
 
     @Column(name = "storeCode", nullable = false)
     private String storeCode;
+
+    @Column(name = "gtin", nullable = false)
+    private String gtin;
 
     @Column(name = "sizeIndex", nullable = false)
     private String sizeIndex;
@@ -37,6 +50,9 @@ public class Planogram {
     private int finalSalesFloorQty;
 
     @Column(name = "ignoreForReverseReplenishment", nullable = false)
-    private int ignoreForReverseReplenishment;
+    private boolean ignoreForReverseReplenishment;
+
+    @Column(name = "calculatedAt")
+    private LocalDateTime calculatedAt;
 
 }

@@ -3,6 +3,7 @@ package com.adidas.tsar.service;
 import com.adidas.tsar.common.DictionariesCollectionUtils;
 import com.adidas.tsar.domain.FtwPriority;
 import com.adidas.tsar.dto.BrandDto;
+import com.adidas.tsar.dto.DictionaryEntity;
 import com.adidas.tsar.dto.RmhGenderAgeDto;
 import com.adidas.tsar.dto.ftwpriority.FtwPriorityExcelDto;
 import com.adidas.tsar.exceptions.ImportException;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Slf4j
@@ -39,7 +40,7 @@ public class FtwPrioritiesImportService extends BaseExcelImportService<FtwPriori
     }
 
     @Override
-    List<FtwPriority> getImportEntities(List<FtwPriorityExcelDto> parseItems) {
+    Stream<FtwPriority> getImportEntities(List<FtwPriorityExcelDto> parseItems) {
         return parseItems.stream()
             .map(createFtwPriorityDto -> FtwPriorityFactory.getFtwPriority(
                 dictionaries.getOrThrow(BrandDto.class, createFtwPriorityDto.getBrand(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
@@ -48,7 +49,7 @@ public class FtwPrioritiesImportService extends BaseExcelImportService<FtwPriori
                 parseInteger(createFtwPriorityDto.getPriority())
                     .orElseThrow(() -> new IllegalArgumentException(getErrorMessage(PRIORITY_HEADER, createFtwPriorityDto.getPriority(), createFtwPriorityDto))),
                 this.currentUser
-            )).collect(Collectors.toList());
+            ));
     }
 
     @Override
@@ -63,16 +64,16 @@ public class FtwPrioritiesImportService extends BaseExcelImportService<FtwPriori
     }
 
     @Override
-    List<String> validateImportDto(FtwPriorityExcelDto rowDto) {
+    Stream<String> validateImportDto(FtwPriorityExcelDto rowDto) {
         return Lists.newArrayList(
             validateDictionaryValue(BrandDto.class, rowDto, FtwPriorityExcelDto::getBrand, true, BRAND_HEADER),
             validateDictionaryValue(RmhGenderAgeDto.class, rowDto, FtwPriorityExcelDto::getRmhGenderAge, true, RMH_GENDER_AGE_HEADER),
             validateSizeIndex(rowDto),
             validatePriorityValue(rowDto)
-        ).stream().filter(Objects::nonNull).collect(Collectors.toList());
+        ).stream().filter(Objects::nonNull);
     }
 
-    private <T> String validateDictionaryValue(Class<T> clazz, FtwPriorityExcelDto rowDto, Function<FtwPriorityExcelDto, String> getValueFunc, boolean isRequired, String headerName) {
+    private <T extends DictionaryEntity> String validateDictionaryValue(Class<T> clazz, FtwPriorityExcelDto rowDto, Function<FtwPriorityExcelDto, String> getValueFunc, boolean isRequired, String headerName) {
         final var value = getValueFunc.apply(rowDto);
         if ((isRequired || !Strings.isNullOrEmpty(value)) && dictionaries.getDictionaryItem(clazz, value).isEmpty()) {
             return getErrorMessage(headerName, value, rowDto);

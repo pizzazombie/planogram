@@ -6,34 +6,55 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor(onConstructor_ = {@Autowired})
-public class MatrixDao {
+public class MatrixDao extends BaseDao {
 
     private final SessionFactory sessionFactory;
     private final MatrixRepository matrixRepository;
 
     public List<Matrix> findAll() {
+        return executeAndReturn(sessionFactory, "select articleId, sizeIndex, quantity, storeId from matrix", resultSet -> {
+            final var result = new ArrayList<Matrix>((int) matrixRepository.count());
+            while (resultSet.next()) {
+                result.add(new Matrix(
+                    resultSet.getLong("articleId"),
+                    resultSet.getString("SizeIndex"),
+                    resultSet.getInt("quantity"),
+                    resultSet.getInt("storeId")
+                ));
+            }
+            return result;
+        });
+    }
+
+    public void saveAll(List<Matrix> matrices) {
         try (var session = sessionFactory.openSession()) {
-            return session.doReturningWork(conn -> {
-                final var result = new ArrayList<Matrix>((int) matrixRepository.count());
-                final var statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                statement.setFetchSize(Integer.MIN_VALUE);
-                final var resultSet = statement.executeQuery("select id, sap, articleId, sizeIndex, quantity from matrix");
-                while (resultSet.next()) {
-                    result.add(new Matrix(
-                        resultSet.getLong("id"),
-                        resultSet.getLong("articleId"),
-                        resultSet.getString("SizeIndex"),
-                        resultSet.getInt("quantity"),
-                        resultSet.getString("sap")
-                    ));
+            session.doWork(conn -> {
+                try {
+                    try (PreparedStatement stmt = conn.prepareStatement("INSERT INTO matrix (sizeIndex, quantity, articleId, storeId) VALUES ( ?, ?, ?, ?)")) {
+                        int i = 1;
+                        for (var result : matrices) {
+                            stmt.setString(1, result.getSizeIndex());
+                            stmt.setInt(2, result.getQuantity());
+                            stmt.setLong(3, result.getArticleId());
+                            stmt.setInt(4, result.getStoreId());
+                            stmt.addBatch();
+
+                            if (i % 1500 == 0) stmt.executeBatch();
+                            ++i;
+                        }
+                        if ((i - 1) % 1500 != 0) stmt.executeBatch();
+                        if ((i - 1) % 1500 != 0) stmt.executeBatch();
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
                 }
-                return result;
             });
         }
     }

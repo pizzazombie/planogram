@@ -13,8 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Slf4j
@@ -28,7 +27,6 @@ public class VmStandardsImportService extends BaseExcelImportService<VmStandardE
     private static final String SIZE_SCALE_HEADER = "SizeScale";
     private static final String PRES_MIN_HEADER = "PresMin";
     private static final String IMPORT_FTW_PRIORITY_FLOW_TITLE = "Import the VM Standard List";
-    private final Pattern sizeScalePattern = Pattern.compile("^[a-zA-Z0-9]{2}$");
     private final DictionariesCollectionUtils dictionaries;
 
     public VmStandardsImportService(DictionariesCollectionUtils dictionaries) {
@@ -41,18 +39,26 @@ public class VmStandardsImportService extends BaseExcelImportService<VmStandardE
     }
 
     @Override
-    List<VmStandard> getImportEntities(List<VmStandardExcelDto> parseItems) {
+    Stream<VmStandard> getImportEntities(List<VmStandardExcelDto> parseItems) {
         return parseItems.stream()
             .map(createVmStandardDto -> VmStandardFactory.getVmStandard(
-                dictionaries.getOrThrow(BrandDto.class, createVmStandardDto.getBrand(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
-                dictionaries.getOrThrow(RmhGenderAgeDto.class, createVmStandardDto.getRmhGenderAge(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
-                dictionaries.getOrThrow(RmhCategoryDto.class, createVmStandardDto.getRmhCategory(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
+                getDictionaryItemOrBlank(BrandDto.class, createVmStandardDto.getBrand()),
+                getDictionaryItemOrBlank(RmhGenderAgeDto.class, createVmStandardDto.getRmhGenderAge()),
+                getDictionaryItemOrBlank(RmhCategoryDto.class, createVmStandardDto.getRmhCategory()),
                 dictionaries.getOrThrow(RmhProductTypeDto.class, createVmStandardDto.getRmhProductType(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
-                dictionaries.getOrThrow(RmhProductDivisionDto.class, createVmStandardDto.getRmhProductDivision(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
-                dictionaries.getOrThrow(SizeScaleDto.class, createVmStandardDto.getSizeScale(), IMPORT_FTW_PRIORITY_FLOW_TITLE),
-                    parseInteger(createVmStandardDto.getPresMin()).orElseThrow(() -> new IllegalArgumentException(getErrorMessage(PRES_MIN_HEADER, createVmStandardDto.getPresMin(), createVmStandardDto))),
+                getDictionaryItemOrBlank(RmhProductDivisionDto.class, createVmStandardDto.getRmhProductDivision()),
+                getDictionaryItemOrBlank(SizeScaleDto.class, createVmStandardDto.getSizeScale()),
+                parseInteger(createVmStandardDto.getPresMin()).orElseThrow(() -> new IllegalArgumentException(getErrorMessage(PRES_MIN_HEADER, createVmStandardDto.getPresMin(), createVmStandardDto))),
                 currentUser
-            )).collect(Collectors.toList());
+            ));
+    }
+
+    private <T extends DictionaryEntity> T getDictionaryItemOrBlank(Class<T> clazz, String name) {
+        if (Strings.isNullOrEmpty(name)) {
+            return dictionaries.get(clazz).getBlankItem();
+        } else {
+            return dictionaries.getOrThrow(clazz, name, IMPORT_FTW_PRIORITY_FLOW_TITLE);
+        }
     }
 
     @Override
@@ -73,31 +79,24 @@ public class VmStandardsImportService extends BaseExcelImportService<VmStandardE
     }
 
     @Override
-    List<String> validateImportDto(VmStandardExcelDto rowDto) {
+    Stream<String> validateImportDto(VmStandardExcelDto rowDto) {
         return Lists.newArrayList(
-            validateDictionaryValue(BrandDto.class, rowDto, VmStandardExcelDto::getBrand, true, BRAND_HEADER),
+            validateDictionaryValue(BrandDto.class, rowDto, VmStandardExcelDto::getBrand, false, BRAND_HEADER),
             validateDictionaryValue(RmhGenderAgeDto.class, rowDto, VmStandardExcelDto::getRmhGenderAge, false, RMH_GENDER_AGE_HEADER),
             validateDictionaryValue(RmhCategoryDto.class, rowDto, VmStandardExcelDto::getRmhCategory, false, RMH_CATEGORY_HEADER),
             validateDictionaryValue(RmhProductTypeDto.class, rowDto, VmStandardExcelDto::getRmhProductType, true, RMH_PRODUCT_TYPE_HEADER),
             validateDictionaryValue(RmhProductDivisionDto.class, rowDto, VmStandardExcelDto::getRmhProductDivision, false, RMH_PRODUCT_DIVISION_HEADER),
-            validateSizeScaleValue(rowDto),
+            validateDictionaryValue(SizeScaleDto.class, rowDto, VmStandardExcelDto::getSizeScale, false, SIZE_SCALE_HEADER),
             validatePresMinValue(rowDto)
-        ).stream().filter(Objects::nonNull).collect(Collectors.toList());
+        ).stream().filter(Objects::nonNull);
     }
 
-    private <T> String validateDictionaryValue(Class<T> clazz, VmStandardExcelDto rowDto, Function<VmStandardExcelDto, String> getValueFunc, boolean isRequired, String headerName) {
+    private <T extends DictionaryEntity> String validateDictionaryValue(Class<T> clazz, VmStandardExcelDto rowDto, Function<VmStandardExcelDto, String> getValueFunc, boolean isRequired, String headerName) {
         final var value = getValueFunc.apply(rowDto);
         if ((isRequired || !Strings.isNullOrEmpty(value)) && dictionaries.getDictionaryItem(clazz, value).isEmpty()) {
             return getErrorMessage(headerName, value, rowDto);
         }
         return null;
-    }
-
-    private String validateSizeScaleValue(VmStandardExcelDto rowDto) {
-        if (!Strings.isNullOrEmpty(rowDto.getSizeScale()) && !sizeScalePattern.matcher(rowDto.getSizeScale()).matches())
-            return getErrorMessage(SIZE_SCALE_HEADER, rowDto.getSizeScale(), rowDto);
-        else
-            return null;
     }
 
     private String validatePresMinValue(VmStandardExcelDto rowDto) {

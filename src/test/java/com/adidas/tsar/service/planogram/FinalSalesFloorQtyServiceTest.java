@@ -6,10 +6,7 @@ import com.adidas.tsar.domain.Matrix;
 import com.adidas.tsar.domain.Removal;
 import com.adidas.tsar.domain.Ridred;
 import com.adidas.tsar.dto.ArticleDto;
-import com.adidas.tsar.dto.planogram.FinalPlanogramDecorator;
-import com.adidas.tsar.dto.planogram.MatricesByArticleImpl;
-import com.adidas.tsar.dto.planogram.PrioritiesDecorator;
-import com.adidas.tsar.dto.planogram.SalesFloorQtyDecorator;
+import com.adidas.tsar.dto.planogram.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.util.Lists;
@@ -27,6 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
 @AutoConfigureMockMvc
@@ -41,10 +40,50 @@ class FinalSalesFloorQtyServiceTest extends BaseIntegrationTest {
     FinalSalesFloorQtyService finalSalesFloorQtyService;
 
     @Test
-    void populateFinalSalesFloorQty_actualRidRedIsExists_finalSalesFloorQtyIsZero_ignoreForReverseReplenishmentIsOne() {
+    void populateFinalSalesFloorQty_actualRidRedIsNotExists_finalSalesFloorQtyIsZero_ignoreForReverseReplenishmentIsOne() {
         final int PRES_MIN = 6;
-        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), "C42J", "190", 3);
-        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), "C42J", "210", 2);
+        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), STORE_1.getId(), "190", 3);
+        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), STORE_1.getId(), "210", 2);
+        FinalPlanogramDecorator chunk = prepareFinalPlanogramDecorator(ARTICLE, PRES_MIN, Arrays.asList(
+            Pair.of(matrix1, 2),
+            Pair.of(matrix2, 3)),
+            Collections.singletonList(prepareRidRed(ARTICLE, false)),
+            Lists.emptyList()
+        );
+
+        finalSalesFloorQtyService.populateFinalSalesFloorQty(chunk);
+
+        assertEquals(0, getFinalSalesFloorQty(chunk, matrix1));
+        assertTrue(getIgnoreForReverseReplenishment(chunk, matrix1));
+        assertEquals(0, getFinalSalesFloorQty(chunk, matrix2));
+        assertTrue(getIgnoreForReverseReplenishment(chunk, matrix2));
+    }
+
+    @Test
+    void populateFinalSalesFloorQty_actualRidRedIsExistsAndRemovalExists_FinalSalesFloorQtyIsZero_ignoreForReverseReplenishmentIsZero() {
+        final int PRES_MIN = 6;
+        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), STORE_1.getId(), "190", 3);
+        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), STORE_1.getId(), "210", 2);
+        FinalPlanogramDecorator chunk = prepareFinalPlanogramDecorator(ARTICLE, PRES_MIN, Arrays.asList(
+            Pair.of(matrix1, 2),
+            Pair.of(matrix2, 3)),
+            Collections.singletonList(prepareRidRed(ARTICLE, true)),
+            Collections.singletonList(prepareRemoval(ARTICLE, STORE_1.getId()))
+        );
+
+        finalSalesFloorQtyService.populateFinalSalesFloorQty(chunk);
+
+        assertEquals(0, getFinalSalesFloorQty(chunk, matrix1));
+        assertFalse(getIgnoreForReverseReplenishment(chunk, matrix1));
+        assertEquals(0, getFinalSalesFloorQty(chunk, matrix2));
+        assertFalse(getIgnoreForReverseReplenishment(chunk, matrix2));
+    }
+
+    @Test
+    void populateFinalSalesFloorQty_actualRidRedIsExistsAndRemovalNotExists_FinalSalesFloorQtyIsEqualsToSalesFloorQty_ignoreForReverseReplenishmentIsOne() {
+        final int PRES_MIN = 6;
+        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), STORE_1.getId(), "190", 3);
+        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), STORE_1.getId(), "210", 2);
         FinalPlanogramDecorator chunk = prepareFinalPlanogramDecorator(ARTICLE, PRES_MIN, Arrays.asList(
             Pair.of(matrix1, 2),
             Pair.of(matrix2, 3)),
@@ -54,50 +93,18 @@ class FinalSalesFloorQtyServiceTest extends BaseIntegrationTest {
 
         finalSalesFloorQtyService.populateFinalSalesFloorQty(chunk);
 
-        assertEquals(0, chunk.getItems().get(matrix1).getFinalSalesFloorQty());
-        assertEquals(1, chunk.getItems().get(matrix1).getIgnoreForReverseReplenishment());
-        assertEquals(0, chunk.getItems().get(matrix2).getFinalSalesFloorQty());
-        assertEquals(1, chunk.getItems().get(matrix2).getIgnoreForReverseReplenishment());
+        assertEquals(2, getFinalSalesFloorQty(chunk, matrix1));
+        assertTrue(getIgnoreForReverseReplenishment(chunk, matrix1));
+        assertEquals(3, getFinalSalesFloorQty(chunk, matrix2));
+        assertTrue(getIgnoreForReverseReplenishment(chunk, matrix2));
     }
 
-    @Test
-    void populateFinalSalesFloorQty_actualRidRedIsNotExistsAndRemovalExists_FinalSalesFloorQtyIsZero_ignoreForReverseReplenishmentIsZero() {
-        final int PRES_MIN = 6;
-        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), "C42J", "190", 3);
-        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), "C42J", "210", 2);
-        FinalPlanogramDecorator chunk = prepareFinalPlanogramDecorator(ARTICLE, PRES_MIN, Arrays.asList(
-            Pair.of(matrix1, 2),
-            Pair.of(matrix2, 3)),
-            Collections.singletonList(prepareRidRed(ARTICLE, false)),
-            Collections.singletonList(prepareRemoval(ARTICLE, "C42J"))
-        );
-
-        finalSalesFloorQtyService.populateFinalSalesFloorQty(chunk);
-
-        assertEquals(0, chunk.getItems().get(matrix1).getFinalSalesFloorQty());
-        assertEquals(0, chunk.getItems().get(matrix1).getIgnoreForReverseReplenishment());
-        assertEquals(0, chunk.getItems().get(matrix2).getFinalSalesFloorQty());
-        assertEquals(0, chunk.getItems().get(matrix2).getIgnoreForReverseReplenishment());
+    private int getFinalSalesFloorQty(FinalPlanogramDecorator chunk, Matrix matrix) {
+        return chunk.getItems().get(new StoreAndSizeKey(matrix)).getFinalSalesFloorQty();
     }
 
-    @Test
-    void populateFinalSalesFloorQty_actualRidRedIsNotExistsAndRemovalNotExists_FinalSalesFloorQtyIsEqualsToSalesFloorQty_ignoreForReverseReplenishmentIsOne() {
-        final int PRES_MIN = 6;
-        Matrix matrix1 = prepareMatrix(1, ARTICLE.getId(), "C42J", "190", 3);
-        Matrix matrix2 = prepareMatrix(2, ARTICLE.getId(), "C42J", "210", 2);
-        FinalPlanogramDecorator chunk = prepareFinalPlanogramDecorator(ARTICLE, PRES_MIN, Arrays.asList(
-            Pair.of(matrix1, 2),
-            Pair.of(matrix2, 3)),
-            Collections.singletonList(prepareRidRed(ARTICLE, false)),
-            Lists.emptyList()
-        );
-
-        finalSalesFloorQtyService.populateFinalSalesFloorQty(chunk);
-
-        assertEquals(2, chunk.getItems().get(matrix1).getFinalSalesFloorQty());
-        assertEquals(1, chunk.getItems().get(matrix1).getIgnoreForReverseReplenishment());
-        assertEquals(3, chunk.getItems().get(matrix2).getFinalSalesFloorQty());
-        assertEquals(1, chunk.getItems().get(matrix2).getIgnoreForReverseReplenishment());
+    private boolean getIgnoreForReverseReplenishment(FinalPlanogramDecorator chunk, Matrix matrix) {
+        return chunk.getItems().get(new StoreAndSizeKey(matrix)).isIgnoreForReverseReplenishment();
     }
 
     private Ridred prepareRidRed(ArticleDto article, boolean isActual) {
@@ -107,8 +114,8 @@ class FinalSalesFloorQtyServiceTest extends BaseIntegrationTest {
             isActual ? LocalDate.now().plusDays(1) : LocalDate.now().minusDays(1));
     }
 
-    private Removal prepareRemoval(ArticleDto article, String storeCode) {
-        return new Removal(EMPTY_ID, article.getId(), storeCode, "REMOVAL_NUMBER");
+    private Removal prepareRemoval(ArticleDto article, int storeId) {
+        return new Removal(EMPTY_ID, article.getId(), storeId, "REMOVAL_NUMBER");
     }
 
     private FinalPlanogramDecorator prepareFinalPlanogramDecorator(ArticleDto article, int presMin, List<Pair<Matrix, Integer>> matrixAndSalesFloorQtyPairList, List<Ridred> ridReds, List<Removal> removals) {
@@ -116,7 +123,10 @@ class FinalSalesFloorQtyServiceTest extends BaseIntegrationTest {
             new MatricesByArticleImpl(article, matrixAndSalesFloorQtyPairList.stream().map(Pair::getKey).collect(Collectors.toList()))
         );
         final var salesFloorQtyDecorator = new SalesFloorQtyDecorator(prioritiesDecorator, presMin);
-        matrixAndSalesFloorQtyPairList.forEach(pair -> salesFloorQtyDecorator.getSalesFloorQtyByMatrix().put(pair.getKey(), pair.getValue()));
+        matrixAndSalesFloorQtyPairList.forEach(pair -> salesFloorQtyDecorator.getSalesFloorQtyByStoreAndSize().put(
+            new StoreAndSizeKey(pair.getKey()),
+            new SalesFloorQtyItem(pair.getValue(), 0, false))
+        );
         return new FinalPlanogramDecorator(salesFloorQtyDecorator, ridReds, removals);
     }
 

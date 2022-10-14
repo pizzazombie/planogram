@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- TODO: by default logging in Holmes format is enabled and strongly recommended -->
+    <!--
+    If for some reason decide to go without Holmes logging format please uncomment include base.xml line
+    and remove include console_json.xml
+    -->
+    <!-- <include resource="com/adidas/logging/logback/base.xml"/> -->
+    <include resource="com/adidas/logging/logback/console_json.xml"/>
+
+    <!--Expose logback through JMX-->
+    <jmxConfigurator/>
+
+</configuration>

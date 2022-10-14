@@ -33,22 +33,22 @@ public class VmStandard implements Serializable {
     private int brandId;
 
     @Column(name = "rmhGenderAgeId")
-    private Integer rmhGenderAgeId;
+    private int rmhGenderAgeId;
 
     @Column(name = "rmhCategoryId")
-    private Integer rmhCategoryId;
+    private int rmhCategoryId;
 
     @Column(name = "rmhProductTypeId", nullable = false)
     private int rmhProductTypeId;
 
     @Column(name = "rmhProductDivisionId")
-    private Integer rmhProductDivisionId;
+    private int rmhProductDivisionId;
 
     @Column(name = "sizeScaleId")
-    private Integer sizeScaleId;
+    private int sizeScaleId;
 
     @Column(name = "presMin")
-    private Integer presMin;
+    private int presMin;
 
     @Column(name = "modifiedBy", nullable = false)
     private String modifiedBy;

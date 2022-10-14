@@ -28,9 +28,7 @@ public class PrioritiesDecorator implements MatricesByArticle {
     }
 
     public void setPriority(String sizeIndex, Integer priority) {
-        if (getSizeIndexes().contains(sizeIndex)) {
             prioritiesBySizeIndex.put(sizeIndex, priority);
-        }
     }
 
     @Override

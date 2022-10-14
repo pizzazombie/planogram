@@ -2,9 +2,8 @@
 //
 // Shared values for different stages:
 //
-def javaAgent = 'build && java'
-def dockerAgent = 'build && docker'
-def kubectlAgent = 'deploy && datacenter && linux'
+def dockerjavaAgent = 'ubuntu_java-11_docker-20'
+def kubectlAgent ='ubuntu_kubectl-1.22'
 
 def projectName = 'tsar-planogram'
 
@@ -18,9 +17,13 @@ def simplifiedBranchName
 def repo
 def tag
 
+def kubeConfig_dev = 'tsar_kube_config_dev'
+def kubeConfig_stg = 'tsar_kube_config_stg'
+def kubeConfig_prd = 'tsar_kube_config_prd'
+
 def bitbucketCredentials = 'CIS_BITBUCKET_CREDENTIALS'
 // docker harbor config
-def dockerCredentials = 'harbor_cloud_registry'
+def dockerCredentials = 'HARBOR_CLOUD'
 def dockerRepo = 'registry.tools.3stripes.net'
 def imagePrefix = 'pea-tsar'
 
@@ -34,7 +37,7 @@ def k8sNamespace_prd = 'tsar-prod-eu'
 @Library(['GlobalJenkinsLibrary@2']) _
 
 //pipeline
-node(javaAgent) {
+node(dockerjavaAgent) {
     deleteDir()
     try{
         stage('collect info') {
@@ -83,8 +86,7 @@ node(javaAgent) {
 
         stage('Build') {
             notifications.bitbucket.sendInProgress(bitbucketCredentials, commit)
-            env.JAVA_HOME = "${tool 'OpenJDK-11'}"
-            env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
+
             tools.maven.run goal: "clean install org.springframework.boot:spring-boot-maven-plugin:repackage -DskipTests"
             sh 'echo "build"'
             stash 'workspace'
@@ -97,25 +99,22 @@ node(javaAgent) {
 
         stage('Sonar') {
             notifications.bitbucket.sendInProgress(bitbucketCredentials, commit)
-            env.JAVA_HOME = "${tool 'OpenJDK-11'}"
-            env.PATH = "${env.JAVA_HOME}/bin:${env.PATH}"
-            tools.sonar.run branch: branch, version: '1.0'
+
+            tools.sonar.run( env: 'COMMUNITY-PRD', version: '1.0', branch: branch )
         }
 
         //Dockerize
         if (branch == devBranch || branch == stgBranch || branch == prdBranch) {
             stage('Dockerize') {
                 notifications.bitbucket.sendInProgress(bitbucketCredentials, commit)
-                node(dockerAgent) {
-                    unstash 'workspace'
+                unstash 'workspace'
 
-                    flows.docker.publish(
-                            repo: dockerRepo,
-                            image: "${imagePrefix}/${projectName}",
-                            credentials: dockerCredentials,
-                            tags: [ 'latest', commit ]
-                    )
-                }
+                flows.docker.publish(
+                        repo: dockerRepo,
+                        image: "${imagePrefix}/${projectName}",
+                        credentials: dockerCredentials,
+                        tags: [ 'latest', commit ]
+                )
             }
         }
 
@@ -132,7 +131,7 @@ node(javaAgent) {
                             placeholderValues: [DEPLOY_IMAGE: "${dockerRepo}/${imagePrefix}/${projectName}:${commit}"]
                     ]
 
-                    withCredentials([file(credentialsId: 'tsar_kube_config_dev', variable: 'KUBECONFIG')]) {
+                    tools.k8s.withKubeconfig(kubeConfig_dev){
                         flows.k8s.deployDeployment(kuberMap)
                     }
 
@@ -155,7 +154,7 @@ node(javaAgent) {
                             placeholderValues: [DEPLOY_IMAGE: "${dockerRepo}/${imagePrefix}/${projectName}:${commit}"]
                     ]
 
-                    withCredentials([file(credentialsId: 'tsar_kube_config_stg', variable: 'KUBECONFIG')]) {
+                    tools.k8s.withKubeconfig(kubeConfig_stg){
                         flows.k8s.deployDeployment(kuberMap)
                     }
 
@@ -178,7 +177,7 @@ node(javaAgent) {
                             placeholderValues: [DEPLOY_IMAGE: "${dockerRepo}/${imagePrefix}/${projectName}:${commit}"]
                     ]
 
-                    withCredentials([file(credentialsId: 'tsar_kube_config_prd', variable: 'KUBECONFIG')]) {
+                    tools.k8s.withKubeconfig(kubeConfig_prd){
                         flows.k8s.deployDeployment(kuberMap)
                     }
 
@@ -191,19 +190,17 @@ node(javaAgent) {
 
         if (branch == devBranch || branch == stgBranch || branch == prdBranch) {
             stage("Promote image") {
-                node(dockerAgent) {
-                    notifications.bitbucket.send status: 'progress',
-                            commit: commit,
-                            credentials: bitbucketCredentials,
-                            message: "Promoting image to :${tag}"
+                notifications.bitbucket.send status: 'progress',
+                        commit: commit,
+                        credentials: bitbucketCredentials,
+                        message: "Promoting image to :${tag}"
 
-                    flows.docker.retag([
-                            repo: dockerRepo,
-                            originalImage: "${imagePrefix}/${projectName}:${commit}",
-                            newImage: "${imagePrefix}/${projectName}:${tag}",
-                            credentials: dockerCredentials
-                    ])
-                }
+                flows.docker.retag([
+                        repo: dockerRepo,
+                        originalImage: "${imagePrefix}/${projectName}:${commit}",
+                        newImage: "${imagePrefix}/${projectName}:${tag}",
+                        credentials: dockerCredentials
+                ])
             }
         }
 

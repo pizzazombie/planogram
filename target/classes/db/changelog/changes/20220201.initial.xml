@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+
+    <changeSet id="20220201-1" author="ponomval">
+        <createTable tableName="ftwPriority">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="ftw_priority_pk"/>
+            </column>
+            <column name="brandId" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhGenderAgeId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sizeIndex" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedBy" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedDate" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20220201-2" author="ponomval">
+        <createTable tableName="vmStandards">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="vm_standards_pk"/>
+            </column>
+            <column name="brandId" type="smallint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhGenderAgeId" type="int"/>
+            <column name="rmhCategoryId" type="int"/>
+            <column name="rmhProductTypeId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rmhProductDivisionId" type="int"/>
+            <column name="sizeScale" type="int"/>
+            <column name="presMin" type="int"/>
+            <column name="modifiedby" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedDate" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20220201-3" author="ponomval">
+        <createTable tableName="totalBuy">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" primaryKeyName="total_buy_pk"/>
+            </column>
+            <column name="articleId" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sizeIndex" type="varchar(3)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedby" type="varchar(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modifiedDate" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

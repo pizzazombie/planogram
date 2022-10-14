@@ -1,5 +1,6 @@
 package com.adidas.tsar.rest;
 
+import com.adidas.tsar.common.LogUtils;
 import com.adidas.tsar.dto.BaseRequest;
 import com.adidas.tsar.dto.BaseResponse;
 import com.adidas.tsar.dto.CreateEntitiesDto;
@@ -39,7 +40,9 @@ public class MatrixController {
     @ApiOperation(value = "Create Matrix", code = 201, response = BaseResponse.class)
     @PostMapping
     public ResponseEntity<BaseResponse<CreateEntitiesDto>> createMatrix(@RequestBody @Valid BaseRequest<List<MatrixCreateDto>> requestBody) {
+        long startTime = System.nanoTime();
         Integer savedEntities = matrixService.createMatrix(requestBody.getData());
+        log.info("{} matrix saved in {}", savedEntities, LogUtils.buildTimeLogInMillis(System.nanoTime() - startTime ));
         return new ResponseEntity<>(ResponseFactory.getCreateEntitiesResponse("New Matrix has been created", savedEntities), HttpStatus.CREATED);
     }
 

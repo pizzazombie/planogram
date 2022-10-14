@@ -25,8 +25,11 @@ public class Removal implements Serializable {
     @Column(name = "articleId", nullable = false)
     private long articleId;
 
-    @Column(name = "sap", nullable = false)
-    private String sap;
+    @Column(name = "storeId", nullable = false)
+    private int storeId;
+
+//    @Column(name = "sap", nullable = false)
+//    private String sap;
 
     @Column(name = "removalNumber", nullable = false)
     private String removalNumber;

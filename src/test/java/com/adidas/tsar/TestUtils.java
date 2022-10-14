@@ -8,7 +8,6 @@ import com.adidas.tsar.dto.*;
 import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @UtilityClass
@@ -48,7 +47,7 @@ public class TestUtils {
             .setModifiedBy(USER);
     }
 
-    public ArticleDto prepareArticle(Integer id, String name, String code, BrandDto brand, RmhGenderAgeDto age, RmhCategoryDto category, RmhProductTypeDto productType, RmhProductDivisionDto division, SizeScaleDto sizeScale, List<ArticleDto.SkuResponseDto> skus) {
+    public ArticleDto prepareArticle(Long id, String name, String code, BrandDto brand, RmhGenderAgeDto age, RmhCategoryDto category, RmhProductTypeDto productType, RmhProductDivisionDto division, SizeScaleDto sizeScale, List<ArticleDto.SkuResponseDto> skus) {
         return new ArticleDto(
             id,
             name,
@@ -68,7 +67,7 @@ public class TestUtils {
         return new TotalBuy(0, article.getId(), sizeIndex, quantity, USER, LocalDateTime.now());
     }
 
-    public Matrix prepareMatrix(ArticleDto article, String sizeIndex, int quantity) {
-        return new Matrix(0, article.getId().longValue(), sizeIndex, quantity, STORE_SUP_NUMBER);
+    public Matrix prepareMatrix(ArticleDto article, int storeId, String sizeIndex, int quantity) {
+        return new Matrix(0, article.getId().longValue(), sizeIndex, quantity, storeId);
     }
 }

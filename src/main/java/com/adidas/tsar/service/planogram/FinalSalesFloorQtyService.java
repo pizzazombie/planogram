@@ -12,19 +12,19 @@ import java.util.List;
 public class FinalSalesFloorQtyService {
 
     public void populateFinalSalesFloorQty(FinalPlanogramDecorator chunk) {
-        if (actualRidRedIsExists(chunk.getRidReds())) {
+        if (!actualRidRedIsExists(chunk.getRidReds())) {
             chunk.getItems().values().forEach(item -> {
                 item.setFinalSalesFloorQty(0);
-                item.setIgnoreForReverseReplenishment(1);
+                item.setIgnoreForReverseReplenishment(true);
             });
         } else {
             chunk.getItems().forEach((key, value) -> {
-                if (removalExists(key.getSap(), chunk.getRemovals())) {
+                if (removalExists(key.getStoreId(), chunk.getRemovals())) {
                     value.setFinalSalesFloorQty(0);
-                    value.setIgnoreForReverseReplenishment(0);
+                    value.setIgnoreForReverseReplenishment(false);
                 } else {
                     value.setFinalSalesFloorQty(value.getSalesFloorQty());
-                    value.setIgnoreForReverseReplenishment(1);
+                    value.setIgnoreForReverseReplenishment(true);
                 }
             });
         }
@@ -33,12 +33,16 @@ public class FinalSalesFloorQtyService {
     boolean actualRidRedIsExists(List<Ridred> ridRedsForArticle) {
         final var now = LocalDate.now();
         return ridRedsForArticle.stream()
-            .anyMatch(ridred -> now.isAfter(ridred.getRid()) && now.isBefore(ridred.getRed()));
+            .anyMatch(ridred -> (
+                    now.isEqual(ridred.getRed()) ||
+                    now.isEqual(ridred.getRid()) ||
+                    (now.isAfter(ridred.getRid()) && now.isBefore(ridred.getRed())))
+            );
     }
 
-    boolean removalExists(String storeCode, List<Removal> removalsForArticle) {
+    boolean removalExists(int storeId, List<Removal> removalsForArticle) {
         return removalsForArticle.stream()
-            .anyMatch(removal -> removal.getSap().equals(storeCode));
+            .anyMatch(removal -> removal.getStoreId() == storeId);
     }
 
 }

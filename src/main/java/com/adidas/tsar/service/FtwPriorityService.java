@@ -19,7 +19,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -50,6 +49,9 @@ public class FtwPriorityService {
     private final FtwPriorityRepository ftwPriorityRepository;
     private final FtwPriorityMapper ftwPriorityMapper;
     private final AnnotationXlsxExporter<FtwPriorityExcelDto> excelExporter;
+
+    @Value("${app.dictionary-blank-name}")
+    private String dictionaryBlankName;
 
     @Value("${app.export.priority-name-pattern}")
     private String exportNamePattern;
@@ -113,7 +115,7 @@ public class FtwPriorityService {
         log.info("Importing new FTW Priorities from {}", file.getOriginalFilename());
         final var dictionaries = buildDictionaries();
         final var importedFtwPrioritiesMap = new FtwPrioritiesImportService(dictionaries)
-            .importFromFile(file, user).stream()
+            .importFromFile(file, user)
             .collect(Collectors.toMap(FtwPriority::buildKey, it -> it));
         final var existingFtwPrioritiesMap = ftwPriorityRepository.findAllByKeys(importedFtwPrioritiesMap.keySet()).stream()
             .collect(Collectors.toMap(FtwPriority::buildKey, it -> it));
@@ -142,8 +144,8 @@ public class FtwPriorityService {
             ftwPriorityRepository.findAll().stream()
                 .map(ftwPriority -> ftwPriorityMapper.toExportDto(
                     ftwPriority,
-                    dictionaries.getDictionaryItem(BrandDto.class, ftwPriority.getBrandId()).orElse(null),
-                    dictionaries.getDictionaryItem(RmhGenderAgeDto.class, ftwPriority.getRmhGenderAgeId()).orElse(null)
+                    dictionaries.get(BrandDto.class).getDictionaryItemOrBlank(ftwPriority.getBrandId()),
+                    dictionaries.get(RmhGenderAgeDto.class).getDictionaryItemOrBlank(ftwPriority.getRmhGenderAgeId())
                 ))
                 .collect(Collectors.toList()),
             new ExportOptions<>(FtwPriorityExcelDto.class, EXPORT_SECTION_TITLE)
@@ -159,10 +161,9 @@ public class FtwPriorityService {
     }
 
     private DictionariesCollectionUtils buildDictionaries() {
-        return new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, tsarMasterDataApiClient.getBrands().getData()),
-            Pair.of(RmhGenderAgeDto.class, tsarMasterDataApiClient.getRmhGenderAges().getData())
-        ));
+        return new DictionariesCollectionUtils()
+            .with(BrandDto.class, tsarMasterDataApiClient.getBrands().getData(), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, tsarMasterDataApiClient.getRmhGenderAges().getData(), dictionaryBlankName);
     }
 
     @Data

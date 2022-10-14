@@ -15,7 +15,7 @@
 		<spring-cloud.version>2020.0.5</spring-cloud.version>
 		<log4j2.version>2.17.0</log4j2.version>
 		<mysql-connector-java.version>8.0.22</mysql-connector-java.version>
-
+		<kafka-event-publisher.version>2.2.0.RELEASE</kafka-event-publisher.version>
 		<!-- Utils -->
 		<liquibase-core.version>4.7.1</liquibase-core.version>
 		<mapstruct.version>1.4.2.Final</mapstruct.version>
@@ -40,6 +40,8 @@
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<adidas.logging.version>2.6.0.RELEASE</adidas.logging.version>
 	</properties>
 
 	<parent>
@@ -94,6 +96,22 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.adidas.pc.core</groupId>
+			<artifactId>kafka-event-publisher</artifactId>
+			<version>${kafka-event-publisher.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.kafka</groupId>
+					<artifactId>spring-kafka</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-boot-starter</artifactId>
@@ -166,12 +184,12 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
-
+		<dependency>
+			<groupId>com.adidas.logging</groupId>
+			<artifactId>logging-spring-web</artifactId>
+			<version>${adidas.logging.version}</version>
+		</dependency>
 	</dependencies>
-
-	<!-- Added for a spring-hateoas BUILD-SNAPSHOT version -->
-	<repositories>
-	</repositories>
 
 	<build>
 		<finalName>tsar.planogram</finalName>
@@ -231,5 +249,25 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>maven.exasol.com</id>
+			<url>https://maven.exasol.com/artifactory/exasol-releases</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>adidas_artifactory</id>
+			<name>adidas_artifactory</name>
+			<url>https://tools.adidas-group.com/artifactory/pc-maven/</url>
+		</repository>
+		<repository>
+			<id>Central</id>
+			<name>maven_central</name>
+			<url>https://repo1.maven.org/maven2/</url>
+		</repository>
+	</repositories>
 
 </project>

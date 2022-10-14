@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public abstract class BaseExcelImportService<T, E> {
@@ -20,7 +21,7 @@ public abstract class BaseExcelImportService<T, E> {
     private static final List<String> supportImportFileExtensions = Lists.newArrayList(".xls", ".xlsx");
     protected String currentUser;
 
-    public List<E> importFromFile(MultipartFile file, String currentUser) {
+    public Stream<E> importFromFile(MultipartFile file, String currentUser) {
         this.currentUser = currentUser;
         validateExtension(file);
         final var parseItems = parse(file);
@@ -38,8 +39,8 @@ public abstract class BaseExcelImportService<T, E> {
         }
 
         validateHeaders(parseItems.get(0));
-        final var errors = parseItems.stream()
-            .flatMap(rowDto -> validateImportDto(rowDto).stream())
+        final var errors = parseItems.stream().skip(1)
+            .flatMap(this::validateImportDto)
             .limit(MAX_PROCESSING_ERRORS)
             .collect(Collectors.toList());
 
@@ -51,9 +52,9 @@ public abstract class BaseExcelImportService<T, E> {
 
     abstract void validateHeaders(T rowItem);
 
-    abstract List<String> validateImportDto(T rowDto);
+    abstract Stream<String> validateImportDto(T rowDto);
 
-    abstract List<E> getImportEntities(List<T> parseItems);
+    abstract Stream<E> getImportEntities(List<T> parseItems);
 
     protected String getErrorMessage(String header, String rowIndex, String fieldValue, String row) {
         return String.format("Incorrect %s field format: %s. Row %s, %s", header, fieldValue, rowIndex, row);

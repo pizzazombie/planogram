@@ -5,12 +5,7 @@ import com.adidas.tsar.common.export.AnnotationXlsxExporter;
 import com.adidas.tsar.common.export.ExportOptions;
 import com.adidas.tsar.data.VmStandardRepository;
 import com.adidas.tsar.domain.VmStandard;
-import com.adidas.tsar.dto.BrandDto;
-import com.adidas.tsar.dto.RmhCategoryDto;
-import com.adidas.tsar.dto.RmhGenderAgeDto;
-import com.adidas.tsar.dto.RmhProductDivisionDto;
-import com.adidas.tsar.dto.RmhProductTypeDto;
-import com.adidas.tsar.dto.SizeScaleDto;
+import com.adidas.tsar.dto.*;
 import com.adidas.tsar.dto.vmstandard.VmStandardCreateDto;
 import com.adidas.tsar.dto.vmstandard.VmStandardCreateEnrichDto;
 import com.adidas.tsar.dto.vmstandard.VmStandardExcelDto;
@@ -23,7 +18,6 @@ import com.adidas.tsar.mapper.VmStandardMapper;
 import com.adidas.tsar.rest.feign.TsarMasterDataApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -55,6 +49,9 @@ public class VmStandardService {
     private final VmStandardRepository vmStandardRepository;
     private final AnnotationXlsxExporter<VmStandardExcelDto> excelExporter;
 
+    @Value("${app.dictionary-blank-name}")
+    private String dictionaryBlankName;
+
     @Value("${app.export.standard-name-pattern}")
     private String exportNamePattern;
 
@@ -69,7 +66,6 @@ public class VmStandardService {
             dictionaries.getDictionaryItem(RmhProductTypeDto.class, it.getRmhProductTypeId()).orElse(null),
             dictionaries.getDictionaryItem(RmhProductDivisionDto.class, it.getRmhProductDivisionId()).orElse(null),
             dictionaries.getDictionaryItem(SizeScaleDto.class, it.getSizeScaleId()).orElse(null)
-
         ));
     }
 
@@ -131,8 +127,8 @@ public class VmStandardService {
     }
 
     public void importFromExcel(MultipartFile file, String currentUser) {
-        final var importedStandards = new VmStandardsImportService(buildDictionaries()).importFromFile(file, currentUser).stream()
-            .collect(Collectors.toMap(VmStandard::buildKey, it -> it));
+        final var importedStandards = new VmStandardsImportService(buildDictionaries()).importFromFile(file, currentUser)
+            .collect(Collectors.toMap(VmStandard::buildKey, it -> it, (t, t2) -> t));
         final var existingStandards = vmStandardRepository.findAllByKeys(importedStandards.keySet()).stream()
             .collect(Collectors.toMap(VmStandard::buildKey, it -> it));
 
@@ -176,14 +172,13 @@ public class VmStandardService {
     }
 
     private DictionariesCollectionUtils buildDictionaries() {
-        return new DictionariesCollectionUtils(List.of(
-            Pair.of(BrandDto.class, tsarMasterDataApiClient.getBrands().getData()),
-            Pair.of(RmhGenderAgeDto.class, tsarMasterDataApiClient.getRmhGenderAges().getData()),
-            Pair.of(RmhCategoryDto.class, tsarMasterDataApiClient.getRmhCategories().getData()),
-            Pair.of(RmhProductTypeDto.class, tsarMasterDataApiClient.getRmhProductTypes().getData()),
-            Pair.of(RmhProductDivisionDto.class, tsarMasterDataApiClient.getRmhProductDivisions().getData()),
-            Pair.of(SizeScaleDto.class, tsarMasterDataApiClient.getSizeScales().getData())
-        ));
+        return new DictionariesCollectionUtils()
+            .with(BrandDto.class, tsarMasterDataApiClient.getBrands().getData(), dictionaryBlankName)
+            .with(RmhGenderAgeDto.class, tsarMasterDataApiClient.getRmhGenderAges().getData(), dictionaryBlankName)
+            .with(RmhCategoryDto.class, tsarMasterDataApiClient.getRmhCategories().getData(), dictionaryBlankName)
+            .with(RmhProductTypeDto.class, tsarMasterDataApiClient.getRmhProductTypes().getData(), dictionaryBlankName)
+            .with(RmhProductDivisionDto.class, tsarMasterDataApiClient.getRmhProductDivisions().getData(), dictionaryBlankName)
+            .with(SizeScaleDto.class, tsarMasterDataApiClient.getSizeScales().getData(), dictionaryBlankName);
     }
 
 }

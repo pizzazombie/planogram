@@ -2,9 +2,9 @@ package com.adidas.tsar.service;
 
 import com.adidas.tsar.BaseIntegrationTest;
 import com.adidas.tsar.PlanogramApplication;
+import com.adidas.tsar.data.MatrixDao;
 import com.adidas.tsar.data.MatrixRepository;
 import com.adidas.tsar.domain.Matrix;
-import com.adidas.tsar.dto.ArticleDto;
 import com.adidas.tsar.dto.ArticleSearchRequestDto;
 import com.adidas.tsar.dto.matrix.MatrixCreateDto;
 import lombok.extern.slf4j.Slf4j;
@@ -23,10 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @AutoConfigureMockMvc
@@ -38,15 +35,20 @@ import static org.mockito.Mockito.when;
 )
 public class MatrixServiceTest extends BaseIntegrationTest {
 
-    @Autowired private MatrixService matrixService;
+    @Autowired
+    private MatrixService matrixService;
 
-    @MockBean private MatrixRepository matrixRepository;
+    @MockBean
+    private MatrixRepository matrixRepository;
 
     @Captor
     private ArgumentCaptor<List<Matrix>> matrixListCaptor;
 
+    @MockBean
+    private MatrixDao matrixDao;
+
     @Test
-    void createMatrix_dataNotExist_created(){
+    void createMatrix_dataNotExist_created() {
         var matrixList = List.of(
             new MatrixCreateDto(ARTICLE.getCode(), SAP_1, SIZE_INDEX_1, 1),
             new MatrixCreateDto(ARTICLE_2.getCode(), SAP_2, SIZE_INDEX_2, 6)
@@ -56,16 +58,16 @@ public class MatrixServiceTest extends BaseIntegrationTest {
 
         matrixService.createMatrix(matrixList);
 
-        verify(matrixRepository, atLeastOnce()).saveAll(matrixListCaptor.capture());
+        verify(matrixDao, atLeastOnce()).saveAll(matrixListCaptor.capture());
         final var createdEntities = matrixListCaptor.getValue();
         assertEquals(2, createdEntities.size());
         createdEntities.sort(Comparator.comparingInt(Matrix::getQuantity));
-        verifyMatrix(createdEntities.get(0), SAP_1, ARTICLE, SIZE_INDEX_1, 1);
-        verifyMatrix(createdEntities.get(1), SAP_2, ARTICLE_2, SIZE_INDEX_2, 6);
+        verifyMatrix(createdEntities.get(0), STORE_1.getId(), ARTICLE.getId(), SIZE_INDEX_1, 1);
+        verifyMatrix(createdEntities.get(1), STORE_2.getId(), ARTICLE_2.getId(), SIZE_INDEX_2, 6);
     }
 
     @Test
-    void deleteMatrix_dataExist_deleted(){
+    void deleteMatrix_dataExist_deleted() {
 
         var deleteIds = List.of(1L, 2L);
 
@@ -76,21 +78,21 @@ public class MatrixServiceTest extends BaseIntegrationTest {
     }
 
     @Test
-    void createMatrix_articleNotFound_created(){
+    void createMatrix_articleNotFound_created() {
         var matrixList = List.of(
             new MatrixCreateDto(ARTICLE.getCode(), SAP_1, SIZE_INDEX_1, 1),
             new MatrixCreateDto(ARTICLE_2.getCode(), SAP_2, SIZE_INDEX_2, 6)
         );
 
-        when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of( ARTICLE_2)));
+        when(tsarMasterDataApiClient.getArticles(any(ArticleSearchRequestDto.class))).thenReturn(buildArrayBaseResponse(List.of(ARTICLE_2)));
 
         matrixService.createMatrix(matrixList);
 
-        verify(matrixRepository, atLeastOnce()).saveAll(matrixListCaptor.capture());
+        verify(matrixDao, atLeastOnce()).saveAll(matrixListCaptor.capture());
         final var createdEntities = matrixListCaptor.getValue();
         assertEquals(1, createdEntities.size());
         createdEntities.sort(Comparator.comparingInt(Matrix::getQuantity));
-        verifyMatrix(createdEntities.get(0), SAP_2, ARTICLE_2, SIZE_INDEX_2, 6);
+        verifyMatrix(createdEntities.get(0), STORE_2.getId(), ARTICLE_2.getId(), SIZE_INDEX_2, 6);
     }
 
     @Test
@@ -106,17 +108,17 @@ public class MatrixServiceTest extends BaseIntegrationTest {
 
         matrixService.createMatrix(matrixList);
 
-        verify(matrixRepository, atLeastOnce()).saveAll(matrixListCaptor.capture());
+        verify(matrixDao, atLeastOnce()).saveAll(matrixListCaptor.capture());
         final var createdEntities = matrixListCaptor.getValue();
         assertEquals(1, createdEntities.size());
-        verifyMatrix(createdEntities.get(0), SAP_2, ARTICLE_2, SIZE_INDEX_2, 6);
+        verifyMatrix(createdEntities.get(0), STORE_2.getId(), ARTICLE_2.getId(), SIZE_INDEX_2, 6);
     }
 
-    private void verifyMatrix(Matrix matrix, String sap, ArticleDto articleDto, String sizeIndex, int quantity){
-        assertEquals(articleDto.getId().longValue(), matrix.getArticleId());
+    private void verifyMatrix(Matrix matrix, int storeId, long articleId, String sizeIndex, int quantity) {
+        assertEquals(articleId, matrix.getArticleId());
         assertEquals(sizeIndex, matrix.getSizeIndex());
         assertEquals(quantity, matrix.getQuantity());
-        assertEquals(sap, matrix.getSap());
+        assertEquals(storeId, matrix.getStoreId());
 
     }
 }
