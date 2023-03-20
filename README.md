@@ -1,23 +1,3 @@
-# How to generate new project (adidas recommended method)
-In order to generate a new project based in the archetype you just need to type the command below in your terminal filling up the parameters with the data of your project.
-
-`mvn org.apache.maven.plugins:maven-archetype-plugin:2.4:generate -DarchetypeCatalog=https://tools.adidas-group.com/artifactory/pea/com/adidas/springboot-archetype/archetype-catalog.xml -DarchetypeGroupId=com.adidas -DarchetypeArtifactId=springboot-archetype -DarchetypeVersion=0.0.3-SNAPSHOT -DgroupId=com.adidas.yourapplication -DartifactId=sample-microservice`
-
-You have to fill up the parameters detailed below :
-
-- groupId : Group of your application .
-- artifactId : Name of your artifact.
-
-Package structure generated
-- common : All utility and classes contained common logic for the rest of packages must be located in this package
-- config : All configuration classes must be located in this package.
-- dto : All dto classes must be located in this package .
-- mapper : All dto mapper must be located in this package.
-- rest : All rest controller classes must be located in this package .
-- hateoas : All hateoas assemblers classes must be located in this package.
-- vo : All vo assemblers classes must be located in this package.
-- service : All service classes must be located in this package
-
 # How to make changes database schema
 
 The database schema is managed by liquibase - a popularity open source project.
